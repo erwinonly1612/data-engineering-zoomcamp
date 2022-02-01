@@ -92,6 +92,7 @@ with DAG(
         },
     )
 
+<<<<<<< HEAD
     bigquery_external_table_task = BigQueryCreateExternalTableOperator(
         task_id="bigquery_external_table_task",
         table_resource={
@@ -108,3 +109,34 @@ with DAG(
     )
 
     download_dataset_task >> format_to_parquet_task >> local_to_gcs_task >> bigquery_external_table_task
+||||||| constructed merge base
+    # gcs_to_bq_task = GCSToBigQueryOperator(
+    #     task_id='gcs_to_bq_task',
+    #     bucket=BUCKET,
+    #     source_objects=[f"raw/{dataset_file}"],
+    #     destination_project_dataset_table=f"{DATASET_NAME}.{TABLE_NAME}",
+    #     # schema_fields=[
+    #     #     {'name': 'name', 'type': 'STRING', 'mode': 'NULLABLE'},
+    #     #     {'name': 'post_abbr', 'type': 'STRING', 'mode': 'NULLABLE'},
+    #     # ],
+    #     write_disposition='WRITE_TRUNCATE',
+    # )
+
+
+    download_dataset_task >> local_to_gcs_task # >> gcs_to_bq_task
+=======
+    gcs_to_bq_task = GCSToBigQueryOperator(
+        task_id='gcs_to_bq_task',
+        bucket=BUCKET,
+        source_objects=[f"raw/{dataset_file}"],
+        destination_project_dataset_table=f"{DATASET_NAME}.{TABLE_NAME}",
+        schema_fields=[
+            {'name': 'name', 'type': 'STRING', 'mode': 'NULLABLE'},
+            {'name': 'post_abbr', 'type': 'STRING', 'mode': 'NULLABLE'},
+        ],
+        write_disposition='WRITE_TRUNCATE',
+    )
+
+
+    download_dataset_task >> local_to_gcs_task  >> gcs_to_bq_task
+>>>>>>> week 2 update
