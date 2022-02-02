@@ -20,7 +20,8 @@ dataset_file = "fhv_tripdata_{{ execution_date.strftime(\'%Y-%m\') }}.csv"
 dataset_url = f"https://nyc-tlc.s3.amazonaws.com/trip+data/{dataset_file}"
 path_to_local_home = os.environ.get("AIRFLOW_HOME", "/opt/airflow/")
 parquet_file = dataset_file.replace('.csv', '.parquet')
-BIGQUERY_DATASET = os.environ.get("BIGQUERY_DATASET", 'trips_data_all')
+bigquery_table_name = parquet_file.replace('.parquet', '')
+BIGQUERY_DATASET = os.environ.get("BIGQUERY_DATASET", 'fhv_taxi_trip')
 
 def format_to_parquet(src_file):
     if not src_file.endswith('.csv'):
@@ -91,7 +92,7 @@ with DAG(
         task_id="local_to_gcs_task",
         python_callable=upload_to_gcs,
         op_kwargs={
-            "bucket": "dtc_data_lake_dtc-de-338802",
+            "bucket": BUCKET,
             "object_name": f"raw/{parquet_file}",
             "local_file": f"{path_to_local_home}/{parquet_file}",
         },
@@ -103,7 +104,7 @@ with DAG(
             "tableReference": {
                 "projectId": PROJECT_ID,
                 "datasetId": BIGQUERY_DATASET,
-                "tableId": "external_table",
+                "tableId":bigquery_table_name,
             },
             "externalDataConfiguration": {
                 "sourceFormat": "PARQUET",
