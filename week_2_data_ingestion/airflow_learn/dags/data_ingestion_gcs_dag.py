@@ -108,6 +108,7 @@ with DAG(
         },
     )
 
+<<<<<<< HEAD
     download_dataset_task >> format_to_parquet_task >> local_to_gcs_task >> bigquery_external_table_task
 ||||||| constructed merge base
 =======
@@ -230,3 +231,9 @@ with DAG(
 =======
     download_dataset_task >> format_to_parquet_task >> local_to_gcs_task >> bigquery_external_table_task
 >>>>>>> week 2 homework submission
+||||||| constructed merge base
+    download_dataset_task >> format_to_parquet_task >> local_to_gcs_task >> bigquery_external_table_task
+=======
+
+    download_dataset_task >> format_to_parquet_task >> local_to_gcs_task  >> bigquery_external_table_task
+>>>>>>> week 2 data ingestion gcs_sag
