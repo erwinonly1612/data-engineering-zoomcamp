@@ -13,9 +13,9 @@ path_to_local_home = os.environ.get("AIRFLOW_HOME", "/opt/airflow/")
 BIGQUERY_DATASET = os.environ.get("BIGQUERY_DATASET", 'trips_data_all')
 
 DATASET = "tripdata"
-COLOUR_RANGE = {'yellow': 'tpep_pickup_datetime', 'green': 'lpep_pickup_datetime'}
-INPUT_PART = "raw"
-INPUT_FILETYPE = "parquet"
+COLOUR_RANGE = {'yellow': 'tpep_pickup_datetime', 'green': 'lpep_pickup_datetime', 'fhv': 'pickup_datetime'}
+INPUT_PART = "raw/trip data" #inherited 'trip data' folder when using transfer service to copy over nyc tlc data
+INPUT_FILETYPE = "csv"
 
 default_args = {
     "owner": "airflow",
@@ -40,8 +40,8 @@ with DAG(
             source_bucket=BUCKET,
             source_object=f'{INPUT_PART}/{colour}_{DATASET}*.{INPUT_FILETYPE}',
             destination_bucket=BUCKET,
-            destination_object=f'{colour}/{colour}_{DATASET}*.{INPUT_FILETYPE}',
-            move_object=True
+            destination_object=f'{colour}/{colour}_{DATASET}',
+            move_object=False
         )
 
         bigquery_external_table_task = BigQueryCreateExternalTableOperator(
@@ -56,8 +56,9 @@ with DAG(
                     "autodetect": "True",
                     "sourceFormat": "CSV",
                     "sourceUris": [f"gs://{BUCKET}/{colour}/*"],
-                },
+                },                
             },
+            location='europe-west6',
         )
 
         CREATE_BQ_TBL_QUERY = (
@@ -75,7 +76,8 @@ with DAG(
                     "query": CREATE_BQ_TBL_QUERY,
                     "useLegacySql": False,
                 }
-            }
+            },
+            location='europe-west6'
         )
 
         move_files_gcs_task >> bigquery_external_table_task >> bq_create_partitioned_table_job
