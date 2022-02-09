@@ -3,6 +3,8 @@
 We will use all the knowledge learned in this week. Please answer your questions via form above.  
 **Deadline** for the homework is 14th Feb 2022 17:00 CET.
 
+### DAG Code is at: **https://github.com/erwinonly1612/data-engineering-zoomcamp/blob/main/week_3_data_warehouse/airflow_learn/dags/gcs_to_bq_dag.py**
+
 ### Question 1: 
 **What is count for fhv vehicles data for year 2019**  
 Can load the data for cloud storage and run a count(*)
@@ -61,3 +63,4 @@ Before query execution this metadata needs to be processed.
 ### (Not required) Question 7: 
 **In which format does BigQuery save data**  
 Review big query internals video.
+### Answer: Columnar
