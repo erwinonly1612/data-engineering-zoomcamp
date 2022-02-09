@@ -4,8 +4,10 @@ FROM apache/airflow:2.2.3
 
 ENV AIRFLOW_HOME=/opt/airflow
 
+#RUN chmod +x scripts
+
 USER root
-RUN apt-get update -qq && apt-get install vim -qqq
+RUN apt-get update -qq && apt-get -y install libpq-dev gcc vim -qq
 # git gcc g++ -qqq
 
 COPY requirements.txt .
@@ -43,4 +45,4 @@ ENV AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT="google-cloud-platform://?extra__google_cl
 WORKDIR $AIRFLOW_HOME
 
 # USER airflow
-USER $AIRFLOW_UID
+# USER $AIRFLOW_UID
