@@ -11,6 +11,18 @@ OPTIONS (
   uris = ['gs://dtc_data_lake_dtc-de-338802/raw/yellow_tripdata_2019-*.parquet', 'gs://dtc_data_lake_dtc-de-338802/raw/yellow_tripdata_2020-*.parquet']
 );
 
+CREATE OR REPLACE EXTERNAL TABLE `dtc-de-338802.trips_data_all.green_tripdata_external`
+OPTIONS (
+  format = 'parquet',
+  uris = ['gs://dtc_data_lake_dtc-de-338802/green/green_tripdata_2019-*.parquet', 'gs://dtc_data_lake_dtc-de-338802/green/green_tripdata_2020-*.parquet']
+);
+
+CREATE OR REPLACE EXTERNAL TABLE `dtc-de-338802.trips_data_all.fhv_tripdata_external`
+OPTIONS (
+  format = 'parquet',
+  uris = ['gs://dtc_data_lake_dtc-de-338802/fhv/fhv_tripdata_2019-*.parquet']
+);
+
 -- Check yello trip data
 SELECT * FROM dtc-de-338802.yellow_taxi_trip.external_yellow_tripdata limit 10;
 

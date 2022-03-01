@@ -1,0 +1,9 @@
+StructType(
+    StructField('hvfhs_license_num',types.StringType(),True),
+    StructField('dispatching_base_num',types.StringType(),True),
+    StructField('pickup_datetime',types.TimestampType(),True),
+    StructField('dropoff_datetime',types.TimestampType(),True),
+    StructField('PULocationID',types.IntegerType(),True),
+    StructField('DOLocationID',types.IntegerType(),True),
+    StructField('SR_Flag',types.StringType(),True)
+)

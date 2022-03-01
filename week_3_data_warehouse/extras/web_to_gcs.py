@@ -1,9 +1,11 @@
-import io
 import os
-import requests
 import pandas as pd
-import pyarrow
+import pyarrow.csv as pv
+import pyarrow.parquet as pq
+import pyarrow as pa
 from google.cloud import storage
+import logging
+import subprocess
 
 """
 Pre-reqs: 
@@ -14,7 +16,80 @@ Pre-reqs:
 
 # services = ['fhv','green','yellow']
 init_url = 'https://nyc-tlc.s3.amazonaws.com/trip+data/'
-BUCKET = os.environ.get("GCP_GCS_BUCKET", "dtc_data_lake_pivotal-surfer-336713")
+BUCKET = os.environ.get("GCP_GCS_BUCKET", "dtc_data_lake_dtc-de-338802")
+
+table_schema_green = pa.schema(
+    [
+        ('VendorID',pa.string()),
+        ('lpep_pickup_datetime',pa.timestamp('s')),
+        ('lpep_dropoff_datetime',pa.timestamp('s')),
+        ('store_and_fwd_flag',pa.string()),
+        ('RatecodeID',pa.int64()),
+        ('PULocationID',pa.int64()),
+        ('DOLocationID',pa.int64()),
+        ('passenger_count',pa.int64()),
+        ('trip_distance',pa.float64()),
+        ('fare_amount',pa.float64()),
+        ('extra',pa.float64()),
+        ('mta_tax',pa.float64()),
+        ('tip_amount',pa.float64()),
+        ('tolls_amount',pa.float64()),
+        ('ehail_fee',pa.float64()),
+        ('improvement_surcharge',pa.float64()),
+        ('total_amount',pa.float64()),
+        ('payment_type',pa.int64()),
+        ('trip_type',pa.int64()),
+        ('congestion_surcharge',pa.float64()),
+    ]
+)
+
+table_schema_yellow = pa.schema(
+   [
+        ('VendorID', pa.string()), 
+        ('tpep_pickup_datetime', pa.timestamp('s')), 
+        ('tpep_dropoff_datetime', pa.timestamp('s')), 
+        ('passenger_count', pa.int64()), 
+        ('trip_distance', pa.float64()), 
+        ('RatecodeID', pa.string()), 
+        ('store_and_fwd_flag', pa.string()), 
+        ('PULocationID', pa.int64()), 
+        ('DOLocationID', pa.int64()), 
+        ('payment_type', pa.int64()), 
+        ('fare_amount',pa.float64()), 
+        ('extra',pa.float64()), 
+        ('mta_tax', pa.float64()), 
+        ('tip_amount', pa.float64()), 
+        ('tolls_amount', pa.float64()), 
+        ('improvement_surcharge', pa.float64()), 
+        ('total_amount', pa.float64()), 
+        ('congestion_surcharge', pa.float64())]
+)
+
+table_schema_fhv = pa.schema(
+   [
+        ('dispatching_base_num', pa.string()), 
+        ('pickup_datetime', pa.timestamp('s')), 
+        ('dropoff_datetime', pa.timestamp('s')), 
+        ('PULocationID', pa.int64()), 
+        ('DOLocationID', pa.int64()), 
+        ('SR_Flag', pa.string())]
+)
+def format_to_parquet(src_file, service):
+    if not src_file.endswith('.csv'):
+        logging.error("Can only accept source files in CSV format, for the moment")
+        return
+    table = pv.read_csv(src_file)
+
+    if service == 'yellow':
+        table = table.cast(table_schema_yellow)
+    
+    elif service == 'green':
+        table = table.cast(table_schema_green)
+
+    elif service == 'fhv':
+        table = table.cast(table_schema_fhv)
+
+    pq.write_table(table, src_file.replace('.csv', '.parquet'))
 
 
 def upload_to_gcs(bucket, object_name, local_file):
@@ -34,22 +109,22 @@ def upload_to_gcs(bucket, object_name, local_file):
 
 def web_to_gcs(year, service):
     for i in range(13):
-        month = '0'+str(i+1)
-        month = month[-2:]
-        file_name = service + '_tripdata_' + year + '-' + month + '.csv'
-        request_url = init_url + file_name
-        r = requests.get(request_url)
-        pd.DataFrame(io.StringIO(r.text)).to_csv(file_name)
-        print(f"Local: {file_name}")
-        df = pd.read_csv(file_name)
-        file_name = file_name.replace('.csv', '.parquet')
-        df.to_parquet(file_name, engine='pyarrow')
-        print(f"Parquet: {file_name}")
-        upload_to_gcs(BUCKET, f"{service}/{file_name}", file_name)
-        print(f"GCS: {service}/{file_name}")
+        if i != 12:
+            month = '0'+str(i+1)
+            month = month[-2:]
+            file_name = service + '_tripdata_' + year + '-' + month + '.csv'
+            request_url = init_url + file_name
+            os.system(f"wget {request_url} -O {file_name}")
+            print(f"Local: {file_name}")
+            parquetized = format_to_parquet(file_name, service)
+            file_name = file_name.replace('.csv', '.parquet')
+            print(f"Parquet: {file_name}")
+            # upload_to_gcs(BUCKET, f"{service}/{file_name}", file_name)
+            print(f"GCS: {service}/{file_name}")
 
 
 web_to_gcs('2019', 'green')
 web_to_gcs('2020', 'green')
-# web_to_gcs('2019', 'yellow')
-# web_to_gcs('2020', 'yellow')
+web_to_gcs('2019', 'yellow')
+web_to_gcs('2020', 'yellow')
+# web_to_gcs('2019', 'fhv')
